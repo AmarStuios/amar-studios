@@ -1991,3 +1991,268 @@ h3 {
       45vw auto, 45vw auto, 45vw auto !important;
   }
 }
+
+/* ============================================================
+   MOBILE — overrides complets pour tablette/smartphone
+   ============================================================ */
+
+/* ---------- TABLETTE (<= 1024px) ---------- */
+@media (max-width: 1024px) {
+  .product-grid { gap: 20px 16px; }
+  .pdp { gap: 32px; }
+  .catalog { gap: 24px; grid-template-columns: 200px 1fr; }
+  .footer.v2 .container { padding: 48px 24px 24px; }
+}
+
+/* ---------- MOBILE (<= 900px) ---------- */
+@media (max-width: 900px) {
+  :root {
+    --header-h: 60px;
+  }
+
+  /* HEADER plus compact */
+  .header.v2 .container.header-inner {
+    padding: 0 16px;
+  }
+  .header.v2 img {
+    height: 32px !important;
+  }
+  .header.v2 a > span {
+    display: none !important;
+  }
+  .header.v2 .lang-toggle {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  .header.v2 .btn-ghost {
+    padding: 6px;
+  }
+
+  /* MARQUEE plus petit */
+  .marquee {
+    font-size: 10px;
+    padding: 8px 0;
+    letter-spacing: 0.1em;
+  }
+  .marquee-track { animation-duration: 30s; }
+
+  /* HERO mobile */
+  .bighero {
+    min-height: calc(80vh - 60px);
+  }
+  .bighero h1 {
+    font-size: clamp(48px, 14vw, 90px) !important;
+    line-height: 0.9 !important;
+  }
+  .bighero .tag {
+    font-size: 10px !important;
+    padding: 6px 12px !important;
+    margin-bottom: 20px !important;
+  }
+  .bighero .tagline {
+    font-size: 10px !important;
+    letter-spacing: 0.2em !important;
+    margin: 20px 0 !important;
+  }
+  .bighero .actions {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100%;
+  }
+  .bighero .actions .btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    font-size: 11px;
+    padding: 14px 16px;
+  }
+  .bighero-inner { padding: 60px 0 !important; }
+
+  /* SECTIONS */
+  .section { padding: 56px 0; }
+  .section-head { margin-bottom: 32px; }
+  .section-head.left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  h2 { font-size: 28px !important; line-height: 1.1 !important; }
+
+  /* CATEGORIES — empilees */
+  .cat-grid {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .cat-card {
+    aspect-ratio: 4 / 3;
+    padding: 24px;
+  }
+  .cat-card .cat-title {
+    font-size: 28px !important;
+  }
+  .cat-card .promo-bg span {
+    font-size: 60px;
+    -webkit-text-stroke: 1px #fff;
+  }
+
+  /* PRODUCT GRID — 2 colonnes mobile */
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px 10px;
+  }
+  .pcard .pname {
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+  .pcard .brand {
+    font-size: 9px;
+  }
+  .pcard .pprice {
+    font-size: 12px;
+  }
+  .pcard .sizes .sz {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+  .pcard .colors .dot {
+    width: 12px;
+    height: 12px;
+  }
+  .pcard .badge-new {
+    font-size: 8px;
+    padding: 3px 6px;
+  }
+  .pcard .fav {
+    width: 26px;
+    height: 26px;
+  }
+  .pcard .fav svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* SALE BANNER */
+  .sale-banner {
+    flex-direction: column !important;
+    padding: 40px 24px !important;
+    margin: 32px 16px !important;
+    text-align: center;
+    gap: 20px;
+  }
+  .sale-banner h2 {
+    font-size: 40px !important;
+  }
+  .sale-banner .label { font-size: 10px; }
+  .sale-banner p { font-size: 13px; }
+  .sale-banner .big-pct {
+    display: none !important;
+  }
+
+  /* PDP (fiche produit) */
+  .pdp {
+    grid-template-columns: 1fr !important;
+    gap: 24px;
+  }
+  .pdp-thumbs {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .pdp-info h1 {
+    font-size: 28px !important;
+  }
+  .pdp-info .price-row { font-size: 18px; }
+
+  /* CATALOG */
+  .catalog {
+    grid-template-columns: 1fr !important;
+    gap: 0;
+  }
+  .filters {
+    position: static !important;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-group { padding: 12px 0; }
+  .filter-group h4 { font-size: 11px; }
+  .catalog-head { flex-direction: column; gap: 12px; align-items: flex-start; }
+
+  /* CART */
+  .cart-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .cart-item {
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+  }
+  .cart-item img { width: 80px; }
+  .cart-item h4 { font-size: 12px; }
+  .summary {
+    position: static !important;
+    padding: 24px 20px;
+  }
+
+  /* CHECKOUT */
+  .checkout {
+    grid-template-columns: 1fr !important;
+  }
+  .form-row { grid-template-columns: 1fr !important; gap: 0; }
+
+  /* DRAWER plein ecran sur mobile */
+  .drawer { width: 100% !important; max-width: 100% !important; }
+  .drawer-header { padding: 16px 20px; }
+  .drawer-body { padding: 12px 20px; }
+  .drawer-footer { padding: 16px 20px; }
+
+  /* FOOTER */
+  .footer.v2 .container {
+    grid-template-columns: 1fr !important;
+    gap: 32px;
+    padding: 48px 20px 20px !important;
+  }
+  .footer.v2 h4 { margin-bottom: 12px; }
+  .footer-bottom { font-size: 11px; }
+
+  /* INFO pages */
+  .info { padding: 0 4px; }
+  .info h1 { font-size: 32px !important; }
+
+  /* ADMIN LOGIN */
+  .admin-login { padding: 16px; }
+  .admin-login-box { padding: 32px 24px; }
+
+  /* CONTAINER mobile padding */
+  .container {
+    padding: 0 16px !important;
+  }
+  .page {
+    padding: 32px 0 60px !important;
+  }
+}
+
+/* ---------- SMALL MOBILE (<= 480px) ---------- */
+@media (max-width: 480px) {
+  .bighero h1 {
+    font-size: clamp(40px, 13vw, 70px) !important;
+  }
+  .product-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px 8px !important;
+  }
+  .cat-card .cat-title { font-size: 24px !important; }
+  .sale-banner h2 { font-size: 32px !important; }
+  .sale-banner { padding: 32px 20px !important; }
+}
+
+/* ---------- viewport meta safety ---------- */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+img, video {
+  max-width: 100%;
+  height: auto;
+}
