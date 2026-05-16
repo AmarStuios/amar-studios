@@ -2256,3 +2256,25 @@ img, video {
   max-width: 100%;
   height: auto;
 }
+
+/* ---------- VETEMENTS card avec image de fond ---------- */
+.cat-card.cat-clothing .cat-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/category-vetements.jpeg');
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.6s ease;
+}
+.cat-card.cat-clothing:hover .cat-bg {
+  transform: scale(1.05);
+}
+.cat-card.cat-clothing .cat-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%);
+}
+.cat-card.cat-clothing .content {
+  position: relative;
+  z-index: 2;
+}

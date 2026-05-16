@@ -44,11 +44,9 @@ export default function Home() {
             </div>
           </div>
           <div className="cat-grid">
-            <Link to="/catalogue" className="cat-card">
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #1a1a1a, #000)' }} />
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.18 }}>
-                <img src="/logo.jpeg" alt="" style={{ width: '60%', maxWidth: 320, opacity: 0.5 }} onError={(e) => (e.currentTarget.style.display = 'none')} />
-              </div>
+            <Link to="/catalogue" className="cat-card cat-clothing">
+              <div className="cat-bg" />
+              <div className="cat-overlay" />
               <div className="content">
                 <div className="cat-title">{t('cats.clothes')}</div>
                 <div className="cat-sub">{t('cats.clothes.sub')}</div>

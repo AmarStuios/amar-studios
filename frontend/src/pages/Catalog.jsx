@@ -10,18 +10,13 @@ export default function Catalog() {
   const { t } = useI18n();
   const [params, setParams] = useSearchParams();
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const q = params.get('q') || '';
   const category = params.get('category') || '';
   const size = params.get('size') || '';
   const color = params.get('color') || '';
-  const minPrice = params.get('minPrice') || '';
-  const maxPrice = params.get('maxPrice') || '';
   const sort = params.get('sort') || 'newest';
-
-  useEffect(() => { api.listCategories().then(setCategories).catch(() => {}); }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -30,12 +25,10 @@ export default function Catalog() {
     if (category) qp.category = category;
     if (size) qp.size = size;
     if (color) qp.color = color;
-    if (minPrice) qp.minPrice = minPrice;
-    if (maxPrice) qp.maxPrice = maxPrice;
     if (sort) qp.sort = sort;
     qp.limit = 48;
     api.listProducts(qp).then((d) => setProducts(d.data)).catch(() => setProducts([])).finally(() => setLoading(false));
-  }, [q, category, size, color, minPrice, maxPrice, sort]);
+  }, [q, category, size, color, sort]);
 
   function setParam(k, v) {
     const next = new URLSearchParams(params);
@@ -62,13 +55,6 @@ export default function Catalog() {
             <input type="search" placeholder={t('cat.filter.search.placeholder')} value={q} onChange={(e) => setParam('q', e.target.value)} />
           </div>
           <div className="filter-group">
-            <h4>{t('cat.filter.category')}</h4>
-            <label><input type="radio" name="cat" checked={!category} onChange={() => setParam('category', '')} />{t('cat.filter.all')}</label>
-            {categories.map((c) => (
-              <label key={c.id}><input type="radio" name="cat" checked={category === c.slug} onChange={() => setParam('category', c.slug)} />{c.name}</label>
-            ))}
-          </div>
-          <div className="filter-group">
             <h4>{t('cat.filter.size')}</h4>
             <div className="size-chips" style={{ flexWrap: 'wrap' }}>
               {SIZES.map((s) => (
@@ -86,13 +72,6 @@ export default function Catalog() {
               </div>
             </div>
           )}
-          <div className="filter-group">
-            <h4>{t('cat.filter.price')}</h4>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input type="number" placeholder={t('cat.filter.min')} value={minPrice} onChange={(e) => setParam('minPrice', e.target.value)} />
-              <input type="number" placeholder={t('cat.filter.max')} value={maxPrice} onChange={(e) => setParam('maxPrice', e.target.value)} />
-            </div>
-          </div>
         </aside>
         <div>
           <div className="catalog-head">
