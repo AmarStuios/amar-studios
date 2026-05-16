@@ -15,7 +15,7 @@ export default function Contact() {
       <h1>{t('info.contact.title')}</h1>
       <p>{t('info.contact.intro')}</p>
       <p>
-        <strong>{t('info.contact.email')}</strong> : amaarstudios@gmail.com<br />
+        <strong>{t('info.contact.email')}</strong> : amarstudios@outlook.fr<br />
         <strong>{t('info.contact.phone')}</strong> : +212 6 75 82 32 72<br />
         <strong>{t('info.contact.hours')}</strong> : {t('info.contact.hours.txt')}
       </p>
