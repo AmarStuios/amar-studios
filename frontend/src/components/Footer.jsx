@@ -18,7 +18,7 @@ export default function Footer() {
           <p style={{ color: '#888', fontSize: 13, maxWidth: 320, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             {t('foot.tagline')}
           </p>
-          <a href="https://www.instagram.com/amaar.studios?igsh=MWl6eTY4eGJhYzJkNQ==" target="_blank" rel="noopener noreferrer"
+          <a href="https://instagram.com/amarstudios" target="_blank" rel="noopener noreferrer"
             style={{ display: 'inline-block', marginTop: 16, color: '#fff', fontSize: 13, borderBottom: '1px solid #fff', paddingBottom: 2 }}>
             Instagram
           </a>

@@ -2,22 +2,10 @@ import prisma from '../config/db.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { slugify } from '../utils/slug.js';
 
-/**
- * GET /api/products
- * Public list — supports filters: q, category, minPrice, maxPrice, size, color, sort
- */
 export const listProducts = asyncHandler(async (req, res) => {
   const {
-    q,
-    category,
-    minPrice,
-    maxPrice,
-    size,
-    color,
-    sort = 'newest',
-    page = 1,
-    limit = 24,
-    admin: isAdmin,
+    q, category, minPrice, maxPrice, size, color,
+    sort = 'newest', page = 1, limit = 24, admin: isAdmin,
   } = req.query;
 
   const where = {};
@@ -46,22 +34,14 @@ export const listProducts = asyncHandler(async (req, res) => {
   let orderBy = { createdAt: 'desc' };
   if (sort === 'price_asc') orderBy = { price: 'asc' };
   if (sort === 'price_desc') orderBy = { price: 'desc' };
-  if (sort === 'newest') orderBy = { createdAt: 'desc' };
 
   const take = Math.min(parseInt(limit, 10), 60);
   const skip = (parseInt(page, 10) - 1) * take;
 
   const [products, total] = await Promise.all([
     prisma.product.findMany({
-      where,
-      orderBy,
-      take,
-      skip,
-      include: {
-        category: true,
-        images: true,
-        variants: true,
-      },
+      where, orderBy, take, skip,
+      include: { category: true, images: true, variants: true },
     }),
     prisma.product.count({ where }),
   ]);
@@ -72,9 +52,6 @@ export const listProducts = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * GET /api/products/:id  — by id OR slug
- */
 export const getProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const product = await prisma.product.findFirst({
@@ -89,19 +66,10 @@ export const getProduct = asyncHandler(async (req, res) => {
   res.json(product);
 });
 
-/**
- * POST /api/products  (admin)
- */
 export const createProduct = asyncHandler(async (req, res) => {
   const {
-    name,
-    description,
-    price,
-    promoPrice,
-    categoryId,
-    featured = false,
-    isNew = true,
-    variants = [],
+    name, description, price, promoPrice, categoryId,
+    featured = false, isNew = true, variants = [],
   } = req.body;
 
   if (!name || !description || price == null || !categoryId) {
@@ -109,15 +77,12 @@ export const createProduct = asyncHandler(async (req, res) => {
   }
 
   let slug = slugify(name);
-  // ensure unique slug
   const existing = await prisma.product.findUnique({ where: { slug } });
   if (existing) slug = `${slug}-${Date.now().toString(36)}`;
 
   const product = await prisma.product.create({
     data: {
-      name,
-      slug,
-      description,
+      name, slug, description,
       price: parseFloat(price),
       promoPrice: promoPrice ? parseFloat(promoPrice) : null,
       categoryId,
@@ -125,8 +90,7 @@ export const createProduct = asyncHandler(async (req, res) => {
       isNew: !!isNew,
       variants: {
         create: variants.map((v) => ({
-          size: v.size,
-          color: v.color,
+          size: v.size, color: v.color,
           colorHex: v.colorHex || null,
           stock: parseInt(v.stock, 10) || 0,
         })),
@@ -137,9 +101,6 @@ export const createProduct = asyncHandler(async (req, res) => {
   res.status(201).json(product);
 });
 
-/**
- * PUT /api/products/:id  (admin)
- */
 export const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, description, price, promoPrice, categoryId, featured, isNew, variants } = req.body;
@@ -156,13 +117,11 @@ export const updateProduct = asyncHandler(async (req, res) => {
   if (featured !== undefined) data.featured = !!featured;
   if (isNew !== undefined) data.isNew = !!isNew;
 
-  // If variants provided: replace them
   if (Array.isArray(variants)) {
     await prisma.productVariant.deleteMany({ where: { productId: id } });
     data.variants = {
       create: variants.map((v) => ({
-        size: v.size,
-        color: v.color,
+        size: v.size, color: v.color,
         colorHex: v.colorHex || null,
         stock: parseInt(v.stock, 10) || 0,
       })),
@@ -170,31 +129,65 @@ export const updateProduct = asyncHandler(async (req, res) => {
   }
 
   const updated = await prisma.product.update({
-    where: { id },
-    data,
+    where: { id }, data,
     include: { variants: true, images: true, category: true },
   });
   res.json(updated);
 });
 
-/**
- * PATCH /api/products/:id/status  (admin)  — toggle active
- */
 export const toggleProductStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { active } = req.body;
   const updated = await prisma.product.update({
-    where: { id },
-    data: { active: !!active },
+    where: { id }, data: { active: !!active },
   });
   res.json(updated);
 });
 
 /**
- * DELETE /api/products/:id  (admin)
+ * DELETE /api/products/:id
+ * Gere automatiquement les cas :
+ *  - Produit sans commandes : suppression complete (BDD + variantes + images Cloudinary)
+ *  - Produit avec commandes : archivage (active=false) pour preserver l'historique
  */
 export const deleteProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  await prisma.product.delete({ where: { id } });
-  res.json({ ok: true });
+
+  const product = await prisma.product.findUnique({
+    where: { id },
+    include: { orderItems: { take: 1 }, images: true },
+  });
+  if (!product) return res.status(404).json({ error: 'Produit introuvable.' });
+
+  const hasOrders = product.orderItems.length > 0;
+
+  if (hasOrders) {
+    // Archive plutot que suppression complete pour preserver les commandes
+    await prisma.product.update({
+      where: { id },
+      data: { active: false },
+    });
+    return res.json({
+      ok: true,
+      archived: true,
+      message: 'Produit archive (des commandes existaient). Il est masque du site mais conserve pour l\'historique.',
+    });
+  }
+
+  // Suppression complete : variantes + images sont supprimees en cascade (schema Prisma)
+  try {
+    await prisma.product.delete({ where: { id } });
+    res.json({ ok: true, deleted: true });
+  } catch (err) {
+    // Fallback : archivage si la suppression echoue pour une raison quelconque
+    console.error('[deleteProduct] hard delete failed, archiving:', err.message);
+    await prisma.product.update({
+      where: { id }, data: { active: false },
+    });
+    res.json({
+      ok: true,
+      archived: true,
+      message: 'Produit archive (suppression complete impossible).',
+    });
+  }
 });

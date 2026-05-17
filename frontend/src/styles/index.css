@@ -2290,3 +2290,48 @@ img, video {
     font-size: clamp(38px, 11vw, 72px) !important;
   }
 }
+
+/* ---------- Fleches de navigation galerie produit ---------- */
+.pdp-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.25s ease;
+  opacity: 0.85;
+}
+.pdp-arrow:hover {
+  opacity: 1;
+  background: #fff;
+  transform: translateY(-50%) scale(1.05);
+}
+.pdp-arrow-left { left: 12px; }
+.pdp-arrow-right { right: 12px; }
+.pdp-arrow svg { color: #000; }
+
+.pdp-counter {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  border-radius: 12px;
+  z-index: 2;
+}
+
+@media (max-width: 900px) {
+  .pdp-arrow { width: 36px; height: 36px; }
+  .pdp-arrow svg { width: 16px; height: 16px; }
+}

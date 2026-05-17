@@ -6,6 +6,7 @@ export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [info, setInfo] = useState(null);
   const [q, setQ] = useState('');
 
   async function load() {
@@ -20,20 +21,31 @@ export default function AdminProducts() {
     }
   }
 
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line
-  }, []);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   async function toggle(p) {
-    await api.toggleProduct(p.id, !p.active);
-    load();
+    try {
+      await api.toggleProduct(p.id, !p.active);
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
   }
 
   async function remove(p) {
-    if (!confirm(`Supprimer définitivement "${p.name}" ?`)) return;
-    await api.deleteProduct(p.id);
-    load();
+    if (!confirm(`Supprimer "${p.name}" ?`)) return;
+    setError(null); setInfo(null);
+    try {
+      const r = await api.deleteProduct(p.id);
+      if (r.archived) {
+        setInfo(r.message || 'Produit archive (des commandes existaient).');
+      } else {
+        setInfo('Produit supprime.');
+      }
+      load();
+    } catch (e) {
+      setError('Erreur suppression : ' + e.message);
+    }
   }
 
   return (
@@ -44,16 +56,12 @@ export default function AdminProducts() {
       </h1>
 
       <div style={{ marginBottom: 16, display: 'flex', gap: 12, maxWidth: 400 }}>
-        <input
-          placeholder="Rechercher…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && load()}
-        />
+        <input placeholder="Rechercher..." value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && load()} />
         <button className="btn btn-sm btn-outline" onClick={load}>Filtrer</button>
       </div>
 
       {error && <div className="alert error">{error}</div>}
+      {info && <div className="alert success">{info}</div>}
 
       <div className="table">
         <table>
@@ -69,7 +77,7 @@ export default function AdminProducts() {
             </tr>
           </thead>
           <tbody>
-            {loading && (<tr><td colSpan="7">Chargement…</td></tr>)}
+            {loading && (<tr><td colSpan="7">Chargement...</td></tr>)}
             {!loading && products.length === 0 && (
               <tr><td colSpan="7" style={{ textAlign: 'center', color: 'var(--grey-500)' }}>Aucun produit</td></tr>
             )}
@@ -93,13 +101,13 @@ export default function AdminProducts() {
                   <td>
                     {p.promoPrice ? (
                       <>
-                        <strong>{parseFloat(p.promoPrice).toFixed(2)} MAD</strong>{' '}
+                        <strong>{parseFloat(p.promoPrice).toFixed(0)} MAD</strong>{' '}
                         <small style={{ textDecoration: 'line-through', color: 'var(--grey-400)' }}>
-                          {parseFloat(p.price).toFixed(2)} MAD
+                          {parseFloat(p.price).toFixed(0)} MAD
                         </small>
                       </>
                     ) : (
-                      `${parseFloat(p.price).toFixed(2)} MAD`
+                      `${parseFloat(p.price).toFixed(0)} MAD`
                     )}
                   </td>
                   <td style={{ color: totalStock === 0 ? '#c0392b' : 'inherit' }}>{totalStock}</td>
