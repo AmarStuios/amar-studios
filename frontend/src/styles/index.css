@@ -2278,3 +2278,15 @@ img, video {
   position: relative;
   z-index: 2;
 }
+
+/* Reduction legere de AMAR STUDIOS dans le hero */
+.bighero h1 {
+  font-size: clamp(40px, 7.5vw, 110px) !important;
+  line-height: 0.92 !important;
+}
+
+@media (max-width: 900px) {
+  .bighero h1 {
+    font-size: clamp(38px, 11vw, 72px) !important;
+  }
+}
