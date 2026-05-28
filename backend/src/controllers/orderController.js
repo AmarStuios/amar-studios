@@ -3,26 +3,25 @@ import asyncHandler from '../utils/asyncHandler.js';
 import { uniqueOrderNumber } from '../utils/slug.js';
 
 /**
- * POST /api/orders  (public, no auth)
- *
+ * POST /api/orders (public, no auth)
  * body: {
  *   customerName, phone, email?, address, city, notes?,
+ *   promoCode?,
  *   items: [ { productId, variantId, quantity } ]
  * }
  */
 export const createOrder = asyncHandler(async (req, res) => {
-  const { customerName, phone, email, address, city, notes, items } = req.body;
+  const { customerName, phone, email, address, city, notes, items, promoCode } = req.body;
 
   if (!customerName || !phone || !address || !city) {
-    return res.status(400).json({ error: 'Informations client incomplètes.' });
+    return res.status(400).json({ error: 'Informations client incompletes.' });
   }
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Panier vide.' });
   }
 
-  // run in transaction to check stock & decrement atomically
   const result = await prisma.$transaction(async (tx) => {
-    let total = 0;
+    let subtotal = 0;
     const orderItemsData = [];
 
     for (const it of items) {
@@ -30,25 +29,18 @@ export const createOrder = asyncHandler(async (req, res) => {
         where: { id: it.variantId },
         include: { product: true },
       });
-      if (!variant) {
-        throw Object.assign(new Error('Variante produit introuvable.'), { statusCode: 400 });
-      }
+      if (!variant) throw Object.assign(new Error('Variante produit introuvable.'), { statusCode: 400 });
       if (!variant.product.active) {
-        throw Object.assign(new Error(`Produit indisponible: ${variant.product.name}`), {
-          statusCode: 400,
-        });
+        throw Object.assign(new Error('Produit indisponible: ' + variant.product.name), { statusCode: 400 });
       }
       if (variant.stock < it.quantity) {
-        throw Object.assign(
-          new Error(
-            `Stock insuffisant pour ${variant.product.name} (${variant.size} / ${variant.color}). Disponible: ${variant.stock}`,
-          ),
-          { statusCode: 400 },
-        );
+        throw Object.assign(new Error(
+          'Stock insuffisant pour ' + variant.product.name + ' (' + variant.size + ' / ' + variant.color + '). Disponible: ' + variant.stock
+        ), { statusCode: 400 });
       }
       const unitPrice = parseFloat(variant.product.promoPrice ?? variant.product.price);
-      const subtotal = +(unitPrice * it.quantity).toFixed(2);
-      total += subtotal;
+      const itemSubtotal = +(unitPrice * it.quantity).toFixed(2);
+      subtotal += itemSubtotal;
 
       orderItemsData.push({
         productId: variant.product.id,
@@ -58,26 +50,63 @@ export const createOrder = asyncHandler(async (req, res) => {
         color: variant.color,
         unitPrice,
         quantity: it.quantity,
-        subtotal,
+        subtotal: itemSubtotal,
       });
 
-      // decrement stock
       await tx.productVariant.update({
         where: { id: variant.id },
         data: { stock: { decrement: it.quantity } },
       });
     }
 
+    // ---------- Application du code promo ----------
+    let promoCodeId = null;
+    let promoCodeText = null;
+    let discountAmount = 0;
+
+    if (promoCode) {
+      const code = promoCode.toUpperCase().trim();
+      const promo = await tx.promoCode.findUnique({ where: { code } });
+      if (promo && promo.active) {
+        const now = new Date();
+        const validDate =
+          (!promo.validFrom || new Date(promo.validFrom) <= now) &&
+          (!promo.validUntil || new Date(promo.validUntil) >= now);
+        const underLimit = !promo.usageLimit || promo.usedCount < promo.usageLimit;
+        const meetsMin = !promo.minOrderAmount || subtotal >= parseFloat(promo.minOrderAmount);
+
+        if (validDate && underLimit && meetsMin) {
+          if (promo.discountType === 'PERCENT') {
+            discountAmount = (subtotal * parseFloat(promo.discountValue)) / 100;
+          } else {
+            discountAmount = parseFloat(promo.discountValue);
+          }
+          discountAmount = Math.min(discountAmount, subtotal);
+          discountAmount = +discountAmount.toFixed(2);
+          promoCodeId = promo.id;
+          promoCodeText = promo.code;
+          await tx.promoCode.update({
+            where: { id: promo.id },
+            data: { usedCount: { increment: 1 } },
+          });
+        }
+      }
+    }
+
+    const total = +(subtotal - discountAmount).toFixed(2);
+
     const order = await tx.order.create({
       data: {
         orderNumber: uniqueOrderNumber(),
-        customerName,
-        phone,
+        customerName, phone,
         email: email || null,
-        address,
-        city,
+        address, city,
         notes: notes || null,
-        total: +total.toFixed(2),
+        subtotal: +subtotal.toFixed(2),
+        discountAmount: discountAmount > 0 ? discountAmount : null,
+        promoCodeId,
+        promoCodeText,
+        total,
         items: { create: orderItemsData },
       },
       include: { items: true },
@@ -88,9 +117,6 @@ export const createOrder = asyncHandler(async (req, res) => {
   res.status(201).json(result);
 });
 
-/**
- * GET /api/admin/orders  (admin)
- */
 export const listOrders = asyncHandler(async (req, res) => {
   const { q, status, page = 1, limit = 30 } = req.query;
   const where = {};
@@ -108,11 +134,9 @@ export const listOrders = asyncHandler(async (req, res) => {
 
   const [data, total] = await Promise.all([
     prisma.order.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
+      where, orderBy: { createdAt: 'desc' },
       include: { items: true },
-      take,
-      skip,
+      take, skip,
     }),
     prisma.order.count({ where }),
   ]);
@@ -123,9 +147,6 @@ export const listOrders = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * GET /api/admin/orders/:id  (admin)
- */
 export const getOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const order = await prisma.order.findUnique({
@@ -136,37 +157,28 @@ export const getOrder = asyncHandler(async (req, res) => {
   res.json(order);
 });
 
-/**
- * PATCH /api/admin/orders/:id/status (admin)
- */
 export const updateOrderStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
   const allowed = ['PENDING', 'CONFIRMED', 'PREPARED', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
-  if (!allowed.includes(status)) {
-    return res.status(400).json({ error: 'Statut invalide.' });
-  }
+  if (!allowed.includes(status)) return res.status(400).json({ error: 'Statut invalide.' });
 
-  // if cancelling, restore stock
   const order = await prisma.order.findUnique({ where: { id }, include: { items: true } });
   if (!order) return res.status(404).json({ error: 'Commande introuvable.' });
 
   if (status === 'CANCELLED' && order.status !== 'CANCELLED') {
     await prisma.$transaction(
-      order.items
-        .filter((it) => it.variantId)
-        .map((it) =>
-          prisma.productVariant.update({
-            where: { id: it.variantId },
-            data: { stock: { increment: it.quantity } },
-          }),
-        ),
+      order.items.filter((it) => it.variantId).map((it) =>
+        prisma.productVariant.update({
+          where: { id: it.variantId },
+          data: { stock: { increment: it.quantity } },
+        }),
+      ),
     );
   }
 
   const updated = await prisma.order.update({
-    where: { id },
-    data: { status },
+    where: { id }, data: { status },
     include: { items: true },
   });
   res.json(updated);

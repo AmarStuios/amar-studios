@@ -26,15 +26,14 @@ import AdminProducts from './pages/admin/AdminProducts';
 import AdminProductEdit from './pages/admin/AdminProductEdit';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminOrderDetail from './pages/admin/AdminOrderDetail';
+import AdminPromoCodes from './pages/admin/AdminPromoCodes';
 import RequireAuth from './components/RequireAuth';
 
 import NotFound from './pages/NotFound';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 }
 
@@ -47,7 +46,6 @@ export default function App() {
       <ScrollToTop />
       {!isAdmin && <Header />}
       <Routes>
-        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/catalogue" element={<Catalog />} />
         <Route path="/produit/:idOrSlug" element={<ProductDetail />} />
@@ -55,7 +53,6 @@ export default function App() {
         <Route path="/commande" element={<Checkout />} />
         <Route path="/commande/confirmation/:orderNumber" element={<OrderConfirmation />} />
 
-        {/* Info */}
         <Route path="/livraison" element={<Shipping />} />
         <Route path="/retours" element={<Returns />} />
         <Route path="/guide-tailles" element={<SizeGuide />} />
@@ -64,22 +61,15 @@ export default function App() {
         <Route path="/mentions-legales" element={<Legal />} />
         <Route path="/confidentialite" element={<Privacy />} />
 
-        {/* Admin */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth>
-              <AdminLayout />
-            </RequireAuth>
-          }
-        >
+        <Route path="/admin" element={<RequireAuth><AdminLayout /></RequireAuth>}>
           <Route index element={<AdminDashboard />} />
           <Route path="produits" element={<AdminProducts />} />
           <Route path="produits/nouveau" element={<AdminProductEdit />} />
           <Route path="produits/:id" element={<AdminProductEdit />} />
           <Route path="commandes" element={<AdminOrders />} />
           <Route path="commandes/:id" element={<AdminOrderDetail />} />
+          <Route path="codes-promo" element={<AdminPromoCodes />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

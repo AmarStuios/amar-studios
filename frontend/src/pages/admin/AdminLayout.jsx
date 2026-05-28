@@ -15,16 +15,17 @@ export default function AdminLayout() {
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <div className="brand">
-          <Logo variant="light" size={42} />
+          <Logo size={42} />
         </div>
         <nav>
           <NavLink to="/admin" end>Tableau de bord</NavLink>
           <NavLink to="/admin/produits">Produits</NavLink>
           <NavLink to="/admin/commandes">Commandes</NavLink>
+          <NavLink to="/admin/codes-promo">Codes promo</NavLink>
         </nav>
         <div className="logout">
           <button onClick={handleLogout} style={{ color: '#a3a3a3', fontSize: 13, letterSpacing: '.08em', textTransform: 'uppercase' }}>
-            Déconnexion
+            Deconnexion
           </button>
         </div>
       </aside>
